@@ -178,7 +178,7 @@ class TrainedModelMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        # Try to retrieve the default trained model
+        # Define the default model info in case no model is found in the database
         model_dir = Path(f"{settings.STATICFILES_DIRS[0]}/model")
         default_model = {
             "name": "model",
@@ -188,20 +188,23 @@ class TrainedModelMiddleware:
             "precision": 0.97561,
             "recall": 0.930233,
             "f1_score": 0.952381,
-            "training_data_path": model_dir / f"data.csv",
-            "model_file_path": model_dir / f"model.pkl",
-            "scaler_file_path": model_dir / f"scaler.pkl",
+            "training_data_path": model_dir / "data.csv",
+            "model_file_path": model_dir / "model.pkl",
+            "scaler_file_path": model_dir / "scaler.pkl",
             "date_trained": "26/08/2024",
         }
-        try:
-            default_model = TrainedModel.objects.filter(is_default=True).first()
-        except TrainedModel.DoesNotExist:
-            default_model = default_model
 
-        # Make the default model accessible in the request object
-        request.trained_model = default_model
+        # Try to retrieve the default trained model from the database
+        trained_model = TrainedModel.objects.filter(is_default=True).first()
 
-        # Pass the request to the next middleware or view
+        # If no trained model is found, fall back to the default model
+        if not trained_model:
+            trained_model = default_model
+
+        # Make the model (from DB or default) accessible in the request object
+        request.trained_model = trained_model
+
+        # Continue processing the request
         response = self.get_response(request)
 
         return response

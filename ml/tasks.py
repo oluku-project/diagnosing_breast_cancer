@@ -86,4 +86,6 @@ gunicorn -c gunicorn_config.py PaulVideoPlatform.wsgi:application
 
 python manage.py runserver --insecure
 
+cd /home/quickdiag/breastAI && /home/quickdiag/venv/bin/python manage.py celery -A PaulVideoPlatform worker
+
 """
